@@ -24,7 +24,7 @@ module.exports = function (db) {
         var stringify = createStringify(format);
         if (!stringify) return errorStream(400, 
             'Unknown format: ' + JSON.stringify(format) + '.\n'
-            + 'Support formats: json, ndj.\n'
+            + 'Support formats: json, ndj.'
         );
         
         var mode = params.mode;
@@ -32,7 +32,7 @@ module.exports = function (db) {
         if (mode !== 'dead' && mode !== 'live' && mode !== 'follow') {
             return errorStream(400, 
                 'Unknown mode: ' + JSON.stringify(mode) + '.\n'
-                + 'Supported modes: dead, live, follow.\n'
+                + 'Supported modes: dead, live, follow.'
             );
         }
         
@@ -44,7 +44,7 @@ module.exports = function (db) {
             }
             if (!Array.isArray(q)) {
                 return errorStream(400,
-                    'filter parameter must be a JSON array\n'
+                    'filter parameter must be a JSON array'
                 );
             }
             stream = index.search(q);
@@ -53,7 +53,7 @@ module.exports = function (db) {
             var end = params.end;
             if (end > '~' || end === undefined) end = '~';
             
-            stream = db.createReadStream(defined({
+            var dbOpts = defined({
                 start: params.start,
                 end: end,
                 reverse: parseBoolean(params.reverse),
@@ -63,7 +63,13 @@ module.exports = function (db) {
                 keyEncoding: params.keyEncoding,
                 valueEncoding: params.valueEncoding,
                 encoding: params.encoding
-            }));
+            });
+            if (dbOpts.keys === false && dbOpts.values === false) {
+                return errorStream(400,
+                    '"keys" and "values" parameters can\'t both be false'
+                );
+            }
+            stream = db.createReadStream(dbOpts);
         }
         return setType(stream.pipe(stringify), 'application/' + format);
     };
@@ -75,7 +81,7 @@ function errorStream (code, msg) {
         tr.emit('code', code);
         tr.emit('type', 'text/plain');
         tr.emit('head', code, { 'content-type': 'text/plain' });
-        tr.queue(msg && msg.message || String(msg));
+        tr.queue('Error: ' + (msg && msg.message || msg) + '\n');
         tr.queue(null);
     });
     return tr;
