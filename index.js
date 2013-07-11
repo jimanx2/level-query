@@ -108,16 +108,15 @@ function defined (obj) {
 
 function createStringify (format) {
     if (format === 'json') {
-        
         var tr = new Transform({ objectMode: true });
         var first = true;
         tr._transform = function (row, enc, next) {
             if (first) {
                 first = false;
-                this.push(row.value);
+                this.push(JSON.stringify(row));
             }
             else {
-                this.push(',\n' + row.value);
+                this.push(',\n' + JSON.stringify(row));
             }
             next();
         };

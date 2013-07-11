@@ -2,8 +2,7 @@ var http = require('http');
 var levelup = require('levelup');
 var sublevel = require('level-sublevel');
 
-var db = levelup(__dirname + '/db');
-sublevel(db);
+var db = sublevel(levelup(__dirname + '/db', { encoding: 'json' }));
 var feast = require('../')(db);
 
 var stringify = require('JSONStream').stringify;
