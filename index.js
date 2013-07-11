@@ -1,8 +1,10 @@
 var qs = require('querystring');
 var url = require('url');
 var search = require('level-search');
-var JSONStream = require('JSONStream');
+var Transform = require('readable-stream/transform');
+var resumer = require('resumer');
 var through = require('through');
+var JSONStream = require('JSONStream');
 
 var nextTick = typeof setImmediate !== 'undefined'
     ? setImmediate : process.nextTick
@@ -11,26 +13,19 @@ var nextTick = typeof setImmediate !== 'undefined'
 module.exports = function (db) {
     var index = search(db, 'index');
     
-    return function (params, cb) {
+    return function (params) {
         if (typeof params === 'string') {
             params = qs.parse(url.parse(params).query);
         }
         
-        var stringify, format = params.format;
-        if (format === 'json' || format === undefined) {
-            stringify = JSONStream.stringify();
-        }
-        else if (format === 'ndj') {
-            stringify = through(function (row) {
-                this.queue(JSON.stringify(row) + '\n');
-            });
-        }
-        else {
-            return errorStream(400, 
-                'Unknown format: ' + JSON.stringify(format) + '.\n'
-                + 'Support formats: json, ndj.\n'
-            );
-        }
+        var format = params.format;
+        if (format === undefined) format = 'json';
+        
+        var stringify = createStringify(format);
+        if (!stringify) return errorStream(400, 
+            'Unknown format: ' + JSON.stringify(format) + '.\n'
+            + 'Support formats: json, ndj.\n'
+        );
         
         var mode = params.mode;
         if (mode === undefined) mode = 'dead';
@@ -87,6 +82,7 @@ function errorStream (code, msg) {
 }
 
 function setType (stream, type) {
+    return stream;
     nextTick(function () {
         stream.emit('code', 200);
         stream.emit('type', type);
@@ -108,4 +104,32 @@ function defined (obj) {
         if (obj[key] !== undefined) acc[key] = obj[key];
         return acc;
     }, {});
+}
+
+function createStringify (format) {
+    if (format === 'json') {
+        
+        var tr = new Transform({ objectMode: true });
+        var first = true;
+        tr._transform = function (row, enc, next) {
+            if (first) {
+                first = false;
+                this.push(row.value);
+            }
+            else {
+                this.push(',\n' + row.value);
+            }
+            next();
+        };
+        tr._flush = function (next) {
+            this.push(']\n');
+            this.push(null);
+            next();
+        };
+        tr.push('[');
+        return tr;
+    }
+    else if (format === 'ndj') {
+        // ...
+    }
 }

@@ -13,6 +13,6 @@ process.stdin.pipe(h).pipe(concat(function (hash_) {
     ready();
 }));
 process.stdin.pipe(concat(function (body_) {
-    body = body_;
+    body = body_.toString('utf8');
     ready();
 }));

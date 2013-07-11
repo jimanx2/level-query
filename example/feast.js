@@ -6,6 +6,8 @@ var db = levelup(__dirname + '/db');
 sublevel(db);
 var feast = require('../')(db);
 
+var stringify = require('JSONStream').stringify;
+
 var server = http.createServer(function (req, res) {
     var s = feast(req.url);
     s.on('head', res.writeHead.bind(res));
