@@ -10,6 +10,15 @@ expose your time-stamped leveldb data as realtime, searchable feeds over http
 
 Specify any of the following on the query string:
 
+## search
+
+An array of key strings that define a path into a nested document
+using [level-search](https://npmjs.org/package/level-search).
+
+This is the same approach that
+[JSONStream](https://npmjs.org/package/JSONStream)
+and [pathway](https://github.com/substack/node-pathway) use.
+
 ## mode
 
 * dead

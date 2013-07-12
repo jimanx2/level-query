@@ -37,33 +37,36 @@ module.exports = function (db) {
         }
         
         var stream;
-        if (params.filter) {
-            try { var q = JSON.parse(params.filter) }
+        var end = params.end;
+        if (end > '~' || end === undefined) end = '~';
+        
+        var dbOpts = defined({
+            min: params.min,
+            max: params.max,
+            start: params.start,
+            end: end,
+            reverse: parseBoolean(params.reverse),
+            keys: parseBoolean(params.keys),
+            values: parseBoolean(params.values),
+            limit: params.limit && parseInt(params.limit, 10),
+            keyEncoding: params.keyEncoding,
+            valueEncoding: params.valueEncoding,
+            encoding: params.encoding
+        });
+        
+        if (params.search) {
+            try { var q = JSON.parse(params.search) }
             catch (err) {
                 return errorStream(400, err);
             }
             if (!Array.isArray(q)) {
                 return errorStream(400,
-                    'filter parameter must be a JSON array'
+                    'search parameter must be a JSON array'
                 );
             }
-            stream = index.createSearchStream(q);
+            stream = index.createSearchStream(q, params);
         }
         else {
-            var end = params.end;
-            if (end > '~' || end === undefined) end = '~';
-            
-            var dbOpts = defined({
-                start: params.start,
-                end: end,
-                reverse: parseBoolean(params.reverse),
-                keys: parseBoolean(params.keys),
-                values: parseBoolean(params.values),
-                limit: params.limit && parseInt(params.limit, 10),
-                keyEncoding: params.keyEncoding,
-                valueEncoding: params.valueEncoding,
-                encoding: params.encoding
-            });
             if (dbOpts.keys === false && dbOpts.values === false) {
                 return errorStream(400,
                     '"keys" and "values" parameters can\'t both be false'
