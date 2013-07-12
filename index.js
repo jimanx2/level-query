@@ -5,6 +5,7 @@ var Transform = require('readable-stream/transform');
 var resumer = require('resumer');
 var through = require('through');
 var literalParse = require('json-literal-parse');
+var pathway = require('pathway');
 
 var nextTick = typeof setImmediate !== 'undefined'
     ? setImmediate : process.nextTick
@@ -66,21 +67,36 @@ module.exports = function (db) {
         });
         
         if (params.sort) {
-            var terms = [].concat(params.sort);
-            var query = [];
-            for (var i = 0; i < terms.length; i++) {
-                try { var q = literalParse(terms[i]) }
-                catch (err) {
-                    q = terms[i];
-                }
-                if (!Array.isArray(q)) q = [ q ];
-                query.push(q);
+            var query = params.sort;
+            if (typeof query === 'string') {
+                try { query = literalParse(query) }
+                catch (err) {}
             }
-            if (query.length === 1) {
-                stream = index.createSearchStream(query[0], dbOpts);
+            if (!Array.isArray(query)) query = [ query ];
+            
+            var strings = [];
+            for (var i = 0; i < query.length; i++) {
+                if (isRegExp(query[i])) break
+                else strings.push(query[i])
             }
-            else {
-                stream = index.createCombinedStream(query, dbOpts);
+            var regex = query[i];
+            
+            if (query.length - strings.length > 1) {
+                return errorStream(400, 'terms not allowed to follow regex');
+            }
+            
+            stream = index.createSearchStream(strings, dbOpts);
+            
+            if (regex) {
+                stream = stream.pipe(through(function (row) {
+                    var node = pathway(row.value, strings);
+                    if (node.length === 0) return;
+                    
+                    var value = node[0];
+                    if (typeof value === 'string' || typeof value === 'number') {
+                        if (regex.test(value)) this.queue(row);
+                    }
+                }));
             }
         }
         else {
@@ -158,4 +174,8 @@ function createStringify (format) {
     else if (format === 'ndj') {
         // ...
     }
+}
+
+function isRegExp (r) {
+    return Object.prototype.toString.call(r) === '[object RegExp]';
 }
