@@ -47,7 +47,7 @@ module.exports = function (db) {
                     'filter parameter must be a JSON array'
                 );
             }
-            stream = index.search(q);
+            stream = index.createSearchStream(q);
         }
         else {
             var end = params.end;
