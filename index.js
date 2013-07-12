@@ -4,7 +4,7 @@ var search = require('level-search');
 var Transform = require('readable-stream/transform');
 var resumer = require('resumer');
 var through = require('through');
-var JSONStream = require('JSONStream');
+var literalParse = require('json-literal-parse');
 
 var nextTick = typeof setImmediate !== 'undefined'
     ? setImmediate : process.nextTick
@@ -36,6 +36,17 @@ module.exports = function (db) {
             );
         }
         
+        var reverse = parseBoolean(params.reverse);
+        if (reverse === undefined && params.order) {
+            var order = params.order.toUpperCase();
+            if (order === 'ASC' || order === 'ASCEND') {
+                reverse = false;
+            }
+            else if (order === 'DESC' || order === 'DESCEND') {
+                reverse = true;
+            }
+        }
+        
         var stream;
         var end = params.end;
         if (end > '~' || end === undefined) end = '~';
@@ -45,7 +56,7 @@ module.exports = function (db) {
             max: params.max,
             start: params.start,
             end: end,
-            reverse: parseBoolean(params.reverse),
+            reverse: parseBoolean(reverse),
             keys: parseBoolean(params.keys),
             values: parseBoolean(params.values),
             limit: params.limit && parseInt(params.limit, 10),
@@ -54,17 +65,23 @@ module.exports = function (db) {
             encoding: params.encoding
         });
         
-        if (params.search) {
-            try { var q = JSON.parse(params.search) }
-            catch (err) {
-                return errorStream(400, err);
+        if (params.sort) {
+            var terms = [].concat(params.sort);
+            var query = [];
+            for (var i = 0; i < terms.length; i++) {
+                try { var q = literalParse(terms[i]) }
+                catch (err) {
+                    q = terms[i];
+                }
+                if (!Array.isArray(q)) q = [ q ];
+                query.push(q);
             }
-            if (!Array.isArray(q)) {
-                return errorStream(400,
-                    'search parameter must be a JSON array'
-                );
+            if (query.length === 1) {
+                stream = index.createSearchStream(query[0], dbOpts);
             }
-            stream = index.createSearchStream(q, params);
+            else {
+                stream = index.createCombinedStream(query, dbOpts);
+            }
         }
         else {
             if (dbOpts.keys === false && dbOpts.values === false) {
@@ -101,6 +118,7 @@ function setType (stream, type) {
 }
 
 function parseBoolean (s) {
+    if (typeof s === 'boolean') return s;
     if (s === undefined) return undefined;
     if (!s) return false;
     if (s === 'false') return false;
