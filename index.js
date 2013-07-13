@@ -64,6 +64,11 @@ module.exports = function (db) {
             valueEncoding: params.valueEncoding,
             encoding: params.encoding
         });
+        if (dbOpts.keys === false && dbOpts.values === false) {
+            return errorStream(400,
+                '"keys" and "values" parameters can\'t both be false'
+            );
+        }
         
         if (params.sort) {
             var query = params.sort;
@@ -75,37 +80,24 @@ module.exports = function (db) {
             stream = index.createSearchStream(query, dbOpts);
         }
         else {
-            if (dbOpts.keys === false && dbOpts.values === false) {
-                return errorStream(400,
-                    '"keys" and "values" parameters can\'t both be false'
-                );
-            }
             stream = db.createReadStream(dbOpts);
         }
-        return setType(stream.pipe(stringify), 'application/' + format);
+        
+        stream.on('error', function (err) {
+            stringify.emit('error', err);
+        });
+        return stream.pipe(stringify);
     };
 };
 
 function errorStream (code, msg) {
     var tr = through();
     nextTick(function () {
-        tr.emit('code', code);
-        tr.emit('type', 'text/plain');
-        tr.emit('head', code, { 'content-type': 'text/plain' });
-        tr.queue('Error: ' + (msg && msg.message || msg) + '\n');
-        tr.queue(null);
+        var err = new Error(msg);
+        err.code = code;
+        tr.emit('error', err);
     });
     return tr;
-}
-
-function setType (stream, type) {
-    return stream;
-    nextTick(function () {
-        stream.emit('code', 200);
-        stream.emit('type', type);
-        stream.emit('head', 200, { 'content-type': type });
-    });
-    return stream;
 }
 
 function parseBoolean (s) {

@@ -20,7 +20,12 @@ var server = http.createServer(function (req, res) {
     }
     else if (req.method === 'GET') {
         var s = feast(req.url);
-        s.on('head', res.writeHead.bind(res));
+        s.on('error', function (err) {
+            res.statusCode = err.code;
+            res.setHeader('content-type', 'text/plain');
+            res.end(err + '\n');
+        });
+        res.setHeader('content-type', 'application/json');
         s.pipe(res);
     }
     else {
