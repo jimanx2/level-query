@@ -70,8 +70,8 @@ module.exports = function (db) {
             );
         }
         
-        if (params.sort) {
-            var query = params.sort;
+        if (params.sort || (params.filter && !params.sort)) {
+            var query = params.sort || params.filter;
             if (typeof query === 'string') {
                 try { query = literalParse(query) }
                 catch (err) {}
@@ -87,7 +87,7 @@ module.exports = function (db) {
             stringify.emit('error', err);
         });
         
-        var filter = params.filter && (function (str) {
+        var filter = params.filter && params.sort && (function (str) {
             // TODO: move upstream to level-search using approximateSize tricks
             
             var f = str;
