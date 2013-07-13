@@ -24,7 +24,7 @@ module.exports = function (db) {
         var stringify = createStringify(format);
         if (!stringify) return errorStream(400, 
             'Unknown format: ' + JSON.stringify(format) + '.\n'
-            + 'Supported formats: json, ndj.'
+            + 'Supported formats: json, pretty, ndj.'
         );
         
         var mode = params.mode;
@@ -162,16 +162,21 @@ function defined (obj) {
 }
 
 function createStringify (format) {
-    if (format === 'json') {
+    if (format === 'json' || format === 'pretty') {
+        var stringify = format === 'pretty'
+            ? function (row) { return JSON.stringify(row, null, 2) }
+            : JSON.stringify
+        ;
+        
         var tr = new Transform({ objectMode: true });
         var first = true;
         tr._transform = function (row, enc, next) {
             if (first) {
                 first = false;
-                this.push(JSON.stringify(row));
+                this.push(stringify(row));
             }
             else {
-                this.push(',\n' + JSON.stringify(row));
+                this.push(',\n' + stringify(row));
             }
             next();
         };
