@@ -182,6 +182,9 @@ var server = http.createServer(function (req, res) {
 server.listen(4000);
 ```
 
+To populate the database, send some `POST`s with JSON to
+`http://localhost:4000/$ID`.
+
 # query parameters
 
 Specify any of the following on the query string:
@@ -245,7 +248,15 @@ array.
 
 ## order
 
+Use the string `desc` for descending elements or `asc` for ascending elements.
+The default mode is ascending.
+
+By default in leveldb all results are ascending and you set the `reverse`
+parameter to `true` when you want descending results.
+
 ## limit
+
+Show at most `limit` many results.
 
 ## min
 
@@ -259,6 +270,7 @@ Establish an upper bound based on the key name, inclusive.
 
 * stream mode: dead, live, follow
 * patch level-search to detect which index it should filter on
+* fix bugs setting min/max and filter/sort at the same time
 
 # install
 
