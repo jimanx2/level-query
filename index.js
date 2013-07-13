@@ -24,7 +24,7 @@ module.exports = function (db) {
         var stringify = createStringify(format);
         if (!stringify) return errorStream(400, 
             'Unknown format: ' + JSON.stringify(format) + '.\n'
-            + 'Support formats: json, ndj.'
+            + 'Supported formats: json, ndj.'
         );
         
         var mode = params.mode;
@@ -139,7 +139,12 @@ function createStringify (format) {
         return tr;
     }
     else if (format === 'ndj') {
-        // ...
+        var tr = new Transform({ objectMode: true });
+        tr._transform = function (row, enc, next) {
+            this.push(JSON.stringify(row) + '\n');
+            next();
+        };
+        return tr;
     }
 }
 
