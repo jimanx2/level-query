@@ -2,7 +2,6 @@ var qs = require('querystring');
 var url = require('url');
 var search = require('level-search');
 var Transform = require('readable-stream/transform');
-var resumer = require('resumer');
 var through = require('through');
 var literalParse = require('json-literal-parse');
 var pathway = require('pathway');
@@ -88,14 +87,30 @@ module.exports = function (db) {
             stringify.emit('error', err);
         });
         
+        var filter = params.filter && (function (str) {
+            // TODO: move upstream to level-search using approximateSize tricks
+            
+            var f = str;
+            if (typeof str === 'string') {
+                try { f = literalParse(str) }
+                catch (err) {}
+            }
+            if (!Array.isArray(f)) f = [f];
+            
+            return function (row) {
+                return pathway(row.value, f).length > 0;
+            };
+        })(params.filter);
+        
         if (params.map) {
             var map = params.map;
             if (typeof map === 'string') {
-                try { var map = JSON.parse(map) }
+                try { var map = literalParse(map) }
                 catch (err) {}
             }
             if (typeof map === 'object' && !Array.isArray(map)) {
                 return stream.pipe(through(function (row) {
+                    if (filter && !filter(row)) return;
                     this.queue(Object.keys(map).reduce(function (acc, key) {
                         var isary = Array.isArray(map[key]);
                         var x = pathway(row.value, isary ? map[key] : [map[key]]);
@@ -107,7 +122,13 @@ module.exports = function (db) {
             if (!Array.isArray(map)) map = [ map ];
             
             return stream.pipe(through(function (row) {
+                if (filter && !filter(row)) return;
                 this.queue(pathway(row.value, map));
+            })).pipe(stringify);
+        }
+        else if (filter) {
+            return stream.pipe(through(function (row) {
+                if (filter(row)) this.queue(row);
             })).pipe(stringify);
         }
         else return stream.pipe(stringify);
