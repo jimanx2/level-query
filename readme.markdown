@@ -4,6 +4,8 @@ search your leveldb from the query string!
 
 # example
 
+## basic queries
+
 With a leveldb populated with
 [github user data](https://api.github.com/legacy/user/search/followers:>170?sort=followers&order=desc&start_page=0),
 
@@ -72,13 +74,82 @@ $ curl -sg 'http://localhost:4000/?sort=followers&filter=["location",/land\b/i]&
 ["torvalds",11062,"Portland, OR"]
 ```
 
+## nested data
+
 For a dataset with more nested data, we can use
 [pathway](https://npmjs.org/package/pathway)-style array paths,
 which is the key path format originally pioneered by
-[JSONStream](https://npmjs.org/package/JSONStream).parse():
+[JSONStream](https://npmjs.org/package/JSONStream).parse().
+
+First, here's the complete data:
 
 ```
+$ curl -sg 'http://localhost:4000/?format=pretty'
+[{
+  "key": "dominictarr",
+  "value": {
+    "name": "dominictarr",
+    "location": {
+      "country": {
+        "short": "NZ",
+        "long": "New Zealand"
+      },
+      "city": "Auckland"
+    }
+  }
+},
+{
+  "key": "rvagg",
+  "value": {
+    "name": "rvagg",
+    "location": {
+      "country": {
+        "short": "AU",
+        "long": "Australia"
+      },
+      "state": {
+        "short": "NSW",
+        "long": "New South Wales"
+      }
+    }
+  }
+},
+{
+  "key": "substack",
+  "value": {
+    "name": "substack",
+    "location": {
+      "country": {
+        "short": "USA",
+        "long": "United States of America"
+      },
+      "state": {
+        "short": "CA",
+        "long": "California"
+      },
+      "city": "Oakland"
+    }
+  }
+}]
 ```
+
+Now we can filter by an array path:
+
+```
+$ curl -sg
+'http://localhost:4000/?filter=["location","country","short","USA"]&map=name'
+[["substack"]]
+```
+
+Array paths can even have regex:
+
+```
+$ curl -sg 'http://localhost:4000/?filter=["location","city",/land$/i]&map=name'
+[["dominictarr"],
+["substack"]]
+```
+
+## server code
 
 Here's the example server we've been using to respond to requests on the query string:
 
@@ -111,27 +182,78 @@ var server = http.createServer(function (req, res) {
 server.listen(4000);
 ```
 
-
 # query parameters
 
 Specify any of the following on the query string:
 
-## search
+## sort
 
-An array of key strings that define a path into a nested document
-using [level-search](https://npmjs.org/package/level-search).
+Sort the results by the value defined at the sort parameter array path into the
+nested document using [level-search](https://npmjs.org/package/level-search).
 
-This is the same approach that
-[JSONStream](https://npmjs.org/package/JSONStream)
-and [pathway](https://github.com/substack/node-pathway) use.
+If the sort parameter is just a string, it will be lifted to an array with a
+single item.
+
+The elements in the array path can be strings, booleans, and regex.
+For more about how array paths work, read about
+[JSONStream](https://npmjs.org/package/JSONStream).parse()
+and [pathway](https://github.com/substack/node-pathway).
+
+## filter
+
+Filter the results by the existence or match of data at the array path into the
+nested document. For leaf nodes, equality or regex test is used. For non-leaf
+nodes, the existence of a matching key is used.
+
+If the filter parameter is just a string, it will be lifted to an array with a
+single item.
+
+The elements in the array path can be strings, booleans, and regex.
+For more about how array paths work, read about
+[JSONStream](https://npmjs.org/package/JSONStream).parse()
+and [pathway](https://github.com/substack/node-pathway).
 
 ## format
 
 * "json" - the default: results are complete json documents you can call
 JSON.parse() on the entire response. Note that 
-
+* "pretty" - display a complete json document, but with 2-space indentation and
+human-readable whitespace
 * "ndj" - [newline delimited json](http://trephine.org/t/index.php?title=Newline_delimited_JSON):
 newline-separated lines of json 
+
+## map
+
+Use map to limit which elements are shown in the results.
+
+If `map` is an array, it will be used as an
+[array path](https://github.com/substack/node-pathway)
+to select results explicitly from the nested document.
+
+If `map` is an object, it maps names to show in the output to 
+[array paths](https://github.com/substack/node-pathway) into the document:
+
+```
+$ curl -sg 'http://localhost:4000/?map={"name":"name","from":["location","country","short"]}'
+[{"name":"dominictarr","from":"NZ"},
+{"name":"rvagg","from":"AU"},
+{"name":"substack","from":"USA"}]
+```
+
+If `map` isn't an object or an array, it will be lifted into a single-item
+array.
+
+## order
+
+## limit
+
+## min
+
+Establish a lower bound based on the key name, inclusive.
+
+## max
+
+Establish an upper bound based on the key name, inclusive.
 
 # todo
 
