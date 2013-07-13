@@ -5,6 +5,7 @@ var Transform = require('readable-stream/transform');
 var resumer = require('resumer');
 var through = require('through');
 var literalParse = require('json-literal-parse');
+var pathway = require('pathway');
 
 var nextTick = typeof setImmediate !== 'undefined'
     ? setImmediate : process.nextTick
@@ -86,7 +87,30 @@ module.exports = function (db) {
         stream.on('error', function (err) {
             stringify.emit('error', err);
         });
-        return stream.pipe(stringify);
+        
+        if (params.map) {
+            var map = params.map;
+            if (typeof map === 'string') {
+                try { var map = JSON.parse(map) }
+                catch (err) {}
+            }
+            if (typeof map === 'object' && !Array.isArray(map)) {
+                return stream.pipe(through(function (row) {
+                    this.queue(Object.keys(map).reduce(function (acc, key) {
+                        var isary = Array.isArray(map[key]);
+                        var x = pathway(row.value, isary ? map[key] : [map[key]]);
+                        acc[key] = x[0];
+                        return acc;
+                    }, {}));
+                })).pipe(stringify);
+            }
+            if (!Array.isArray(map)) map = [ map ];
+            
+            return stream.pipe(through(function (row) {
+                this.queue(pathway(row.value, map));
+            })).pipe(stringify);
+        }
+        else return stream.pipe(stringify);
     };
 };
 
