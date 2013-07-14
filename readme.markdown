@@ -2,6 +2,8 @@
 
 search your leveldb from the query string!
 
+[![build status](https://secure.travis-ci.org/substack/level-query.png)](http://travis-ci.org/substack/level-query)
+
 # example
 
 ## basic queries
