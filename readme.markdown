@@ -185,9 +185,53 @@ server.listen(4000);
 To populate the database, send some `POST`s with JSON to
 `http://localhost:4000/$ID`.
 
+# methods
+
+``` js
+var levelQuery = require('level-query')
+```
+
+## var query = levelQuery(db)
+
+Return a query function `query()` from the sublevel-enabled leveldb database
+handle `db` with json encoding.
+
+Here's an example of creating a query instance:
+
+``` js
+var levelup = require('levelup');
+var sublevel = require('level-sublevel');
+var levelQuery = require('level-query');
+
+var db = sublevel(levelup(__dirname + '/db', { encoding: 'json' }));
+var query = levelQuery(db);
+```
+
+## var q = query(params)
+
+Return a readable stream `q` with the results of the query contained in
+`params`.
+
+Make sure to listen for `'error'` events on the `q` instance.
+
+If `params` is a string, it will be parsed as a query string and its elements
+will be parsed with
+[json-literal-parse](https://github.com/substack/json-literal-parse) where
+possible to allow for
+[safe regexes](https://github.com/substack/safe-regex)
+in nested json data.
+
+If `params` is an object, its parameters will be taken directly.
+When passing an object, you can also specify a truthy value for `params.raw` to
+skip stringification and operate directly on row objects.
+
+All the rest of the `params` are treated according to the "query parameters"
+section that follows.
+
 # query parameters
 
-Specify any of the following on the query string:
+Specify any of the following on the query string or by passing the options
+directly to `query(params)` as a `params` object:
 
 ## sort
 
