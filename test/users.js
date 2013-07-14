@@ -107,3 +107,24 @@ test('oaklanders with object map', function (t) {
         return a.location < b.location ? -1 : 1;
     }
 });
+
+test('sort by repos, limit 5', function (t) {
+    t.plan(1);
+    
+    var q = query('/?sort=repos&limit=5&order=desc&map=[["username","repos"]]');
+    
+    q.pipe(concat(function (body) {
+        var rows = JSON.parse(body);
+        t.deepEqual(rows, userData
+            .sort(cmp)
+            .slice(0,5)
+            .map(function (row) {
+                return [ row.username, row.repos ];
+            })
+        );
+    }));
+    
+    function cmp (a, b) {
+        return a.repos < b.repos ? 1 : -1;
+    }
+});
