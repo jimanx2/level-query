@@ -118,8 +118,12 @@ module.exports = function (db) {
                     if (filter && !filter(row)) return;
                     this.queue(Object.keys(map).reduce(function (acc, key) {
                         var isary = Array.isArray(map[key]);
+                        var isSingle = isary
+                            ? typeof map[key][0] === 'string'
+                            : typeof map[key] === 'string'
+                        ;
                         var x = pathway(row.value, isary ? map[key] : [map[key]]);
-                        acc[key] = x[0];
+                        acc[key] = isSingle ? x[0] : x;
                         return acc;
                     }, {}));
                 })).pipe(stringify);
