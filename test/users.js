@@ -37,3 +37,23 @@ test('all results', function (t) {
         return a.key < b.key ? -1 : 1;
     }
 });
+
+test('oaklanders', function (t) {
+    t.plan(1);
+    
+    var q = query('/?filter=["location",/\\boakland\\b/i]&map=username');
+    q.pipe(concat(function (body) {
+        var rows = JSON.parse(body);
+        t.deepEqual(rows, userData
+            .filter(function (row) {
+                return /\boakland\b/i.test(row.location);
+            })
+            .sort(cmp)
+            .map(function (row) { return [ row.username ] })
+        );
+    }));
+    
+    function cmp (a, b) {
+        return a.location < b.location ? -1 : 1;
+    }
+});
