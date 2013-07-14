@@ -15,7 +15,8 @@
     "level-sublevel": "~4.7.1",
     "leveldown": "~0.6.2",
     "tape": "~1.0.4",
-    "concat-stream": "~1.0.0"
+    "concat-stream": "~1.0.0",
+    "mkdirp": "~0.3.5"
   },
   "scripts": {
     "test": "tape test/*.js"

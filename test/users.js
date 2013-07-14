@@ -4,6 +4,9 @@ var sublevel = require('level-sublevel');
 var through = require('through');
 var concat = require('concat-stream');
 
+var mkdirp = require('mkdirp');
+mkdirp.sync(__dirname + '/test/data');
+
 var db = sublevel(levelup(__dirname + '/data/users', { encoding: 'json' }));
 var query = require('../')(db);
 var userData = require('./users.json').users;
