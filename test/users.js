@@ -128,3 +128,28 @@ test('sort by repos, limit 5', function (t) {
         return a.repos < b.repos ? 1 : -1;
     }
 });
+
+test('sort and filter', function (t) {
+    t.plan(1);
+    
+    var q = query('/?sort=repos&filter=["location",/land\\b/i]'
+        + '&order=desc&map=[["username","repos"]]');
+    
+    q.pipe(concat(function (body) {
+        var rows = JSON.parse(body);
+        console.log(rows);
+        t.deepEqual(rows, userData
+            .sort(cmp)
+            .filter(function (row) {
+                return /land\b/.test(row.location);
+            })
+            .map(function (row) {
+                return [ row.username, row.repos ];
+            })
+        );
+    }));
+    
+    function cmp (a, b) {
+        return a.repos < b.repos ? 1 : -1;
+    }
+});
