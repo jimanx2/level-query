@@ -46,3 +46,21 @@ test('deeply nested string path', function (t) {
         t.deepEqual(row, ["substack"]);
     }));
 });
+
+test('deeply nested string/regex path', function (t) {
+    t.plan(1);
+    
+    var q = query({
+        filter: [ 'location', 'city', /land$/i ],
+        map: 'name',
+        raw: true
+    });
+    
+    var rows = [];
+    q.pipe(through(write, end));
+    
+    function write (row) { rows.push(row) }
+    function end () {
+        t.deepEqual(rows, [["dominictarr"],["substack"]]);
+    }
+});
