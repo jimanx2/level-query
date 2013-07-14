@@ -82,3 +82,28 @@ test('oaklanders with followers and repos', function (t) {
         return a.location < b.location ? -1 : 1;
     }
 });
+
+test('oaklanders with object map', function (t) {
+    t.plan(1);
+    
+    var q = query({
+        filter: [ 'location',/\boakland\b/i ],
+        map: { u: 'username', rf: [['repos','followers']] }
+    });
+    q.pipe(concat(function (body) {
+        var rows = JSON.parse(body);
+        t.deepEqual(rows, userData
+            .filter(function (row) {
+                return /\boakland\b/i.test(row.location);
+            })
+            .sort(cmp)
+            .map(function (row) {
+                return { u: row.username, rf: [ row.repos, row.followers ] };
+            })
+        );
+    }));
+    
+    function cmp (a, b) {
+        return a.location < b.location ? -1 : 1;
+    }
+});
