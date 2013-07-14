@@ -116,16 +116,22 @@ module.exports = function (db) {
             if (typeof map === 'object' && !Array.isArray(map)) {
                 return stream.pipe(through(function (row) {
                     if (filter && !filter(row)) return;
-                    this.queue(Object.keys(map).reduce(function (acc, key) {
+                    var value = Object.keys(map).reduce(function (acc, key) {
                         var isary = Array.isArray(map[key]);
                         var isSingle = isary
-                            ? typeof map[key][0] === 'string'
+                            ? typeof map[key][map[key].length-1] === 'string'
                             : typeof map[key] === 'string'
                         ;
                         var x = pathway(row.value, isary ? map[key] : [map[key]]);
                         acc[key] = isSingle ? x[0] : x;
                         return acc;
-                    }, {}));
+                    }, {});
+                    
+                    if (dbOpts.keys === true) {
+                        this.queue({ key: row.key, value: value });
+                    }
+                    else this.queue(value);
+                    
                 })).pipe(stringify);
             }
             if (!Array.isArray(map)) map = [ map ];
