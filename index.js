@@ -2,6 +2,7 @@ var qs = require('querystring');
 var url = require('url');
 var search = require('level-search');
 var Transform = require('readable-stream/transform');
+var PassThrough = require('readable-stream/passthrough');
 var through = require('through');
 var literalParse = require('json-literal-parse');
 var pathway = require('pathway');
@@ -16,10 +17,13 @@ module.exports = function (db) {
     return function (params) {
         if (typeof params === 'string') {
             params = qs.parse(url.parse(params).query);
+            params.raw = false; // can only pass raw in as an object argument
+            if (params.format === 'raw') delete params.format;
         }
         
         var format = params.format;
         if (format === undefined) format = 'json';
+        if (parseBoolean(params.raw)) format = 'raw';
         
         var stringify = createStringify(format);
         if (!stringify) return errorStream(400, 
@@ -148,6 +152,7 @@ function errorStream (code, msg) {
 function parseBoolean (s) {
     if (typeof s === 'boolean') return s;
     if (s === undefined) return undefined;
+    if (s === '') return true;
     if (!s) return false;
     if (s === 'false') return false;
     if (s === '0') return false;
@@ -195,6 +200,9 @@ function createStringify (format) {
             next();
         };
         return tr;
+    }
+    else if (format === 'raw') {
+        return new PassThrough();
     }
 }
 
