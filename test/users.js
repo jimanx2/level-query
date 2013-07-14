@@ -44,6 +44,7 @@ test('oaklanders', function (t) {
     var q = query('/?filter=["location",/\\boakland\\b/i]&map=username');
     q.pipe(concat(function (body) {
         var rows = JSON.parse(body);
+        console.log(rows);
         t.deepEqual(rows, userData
             .filter(function (row) {
                 return /\boakland\b/i.test(row.location);
@@ -67,6 +68,7 @@ test('oaklanders with followers and repos', function (t) {
     });
     q.pipe(concat(function (body) {
         var rows = JSON.parse(body);
+        console.log(rows);
         t.deepEqual(rows, userData
             .filter(function (row) {
                 return /\boakland\b/i.test(row.location);
@@ -92,6 +94,7 @@ test('oaklanders with object map', function (t) {
     });
     q.pipe(concat(function (body) {
         var rows = JSON.parse(body);
+        console.log(rows);
         t.deepEqual(rows, userData
             .filter(function (row) {
                 return /\boakland\b/i.test(row.location);
