@@ -1,0 +1,24 @@
+[
+  {
+    "name":"substack",
+    "location":{
+      "country": {"short":"USA","long":"United States of America"},
+      "state": {"short":"CA", "long": "California" },
+      "city": "Oakland"
+    }
+  },
+  {
+    "name":"dominictarr",
+    "location":{
+      "country": {"short":"NZ","long":"New Zealand"},
+      "city": "Auckland"
+    }
+  },
+  {
+    "name": "rvagg",
+    "location":{
+      "country": {"short":"AU","long":"Australia"},
+      "state": { "short":"NSW", "long": "New South Wales" }
+    }
+  }
+]
