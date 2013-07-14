@@ -1,0 +1,42 @@
+{
+  "name": "level-query",
+  "version": "0.0.0",
+  "description": "search your leveldb from the query string",
+  "main": "index.js",
+  "dependencies": {
+    "json-literal-parse": "~0.0.0",
+    "level-search": "~1.5.0",
+    "pathway": "~0.1.2",
+    "readable-stream": "~1.0.2",
+    "through": "~2.3.4"
+  },
+  "devDependencies": {
+    "levelup": "~0.10.0",
+    "levelup": "~4.7.1",
+    "tape": "~1.0.4"
+  },
+  "scripts": {
+    "test": "tape test/*.js"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git://github.com/substack/level-query.git"
+  },
+  "homepage": "https://github.com/substack/level-query",
+  "keywords": [
+    "leveldb",
+    "search",
+    "query",
+    "sort",
+    "filter",
+    "map",
+    "database",
+    "http"
+  ],
+  "author": {
+    "name": "James Halliday",
+    "email": "mail@substack.net",
+    "url": "http://substack.net"
+  },
+  "license": "MIT"
+}
