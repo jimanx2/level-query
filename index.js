@@ -20,6 +20,7 @@ module.exports = function (db) {
             params.raw = false; // can only pass raw in as an object argument
             if (params.format === 'raw') delete params.format;
         }
+        if (!params) params = {};
         
         var format = params.format;
         if (format === undefined) format = 'json';
