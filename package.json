@@ -12,7 +12,8 @@
   },
   "devDependencies": {
     "levelup": "~0.10.0",
-    "levelup": "~4.7.1",
+    "level-sublevel": "~4.7.1",
+    "leveldown": "~0.6.2",
     "tape": "~1.0.4"
   },
   "scripts": {
