@@ -312,6 +312,13 @@ Establish a lower bound based on the key name, inclusive.
 
 Establish an upper bound based on the key name, inclusive.
 
+## keys
+
+Boolean about whether to include "key" and "value" wrapping in the results.
+
+By default `keys` is true except when you set a `map`, in which case it will
+need to be explicitly enabled.
+
 # todo
 
 * stream mode: dead, live, follow
