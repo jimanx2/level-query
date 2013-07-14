@@ -138,7 +138,11 @@ module.exports = function (db) {
             
             return stream.pipe(through(function (row) {
                 if (filter && !filter(row)) return;
-                this.queue(pathway(row.value, map));
+                var value = pathway(row.value, map);
+                if (dbOpts.keys === true) {
+                    this.queue({ key: row.key, value: value });
+                }
+                else this.queue(value);
             })).pipe(stringify);
         }
         else if (filter) {
