@@ -33,3 +33,16 @@ test('pretty results', function (t) {
         return a.key < b.key ? -1 : 1;
     }
 });
+
+test('deeply nested string path', function (t) {
+    t.plan(1);
+    
+    var q = query({
+        filter: [ 'location', 'country', 'short', 'USA' ],
+        map: 'name',
+        raw: true
+    });
+    q.pipe(through(function (row) {
+        t.deepEqual(row, ["substack"]);
+    }));
+});

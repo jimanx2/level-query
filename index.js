@@ -207,7 +207,7 @@ function createStringify (format) {
         return tr;
     }
     else if (format === 'raw') {
-        return new PassThrough();
+        return new PassThrough({ objectMode: true });
     }
 }
 
