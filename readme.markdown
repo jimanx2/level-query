@@ -337,6 +337,13 @@ parameter to `true` when you want descending results.
 
 Show at most `limit` many results.
 
+## follow
+
+When `follow` is true, the stream stays open similarly to `tail -f`.
+
+When new data is inserted that matches the filter and sort parameters, the
+stream will emit the new data.
+
 ## min
 
 Establish a lower bound based on the key name, inclusive.
