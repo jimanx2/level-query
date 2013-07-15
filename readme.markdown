@@ -151,6 +151,38 @@ $ curl -sg 'http://localhost:4000/?filter=["location","city",/land$/i]&map=name'
 ["substack"]]
 ```
 
+## follow live updates
+
+You can add `?follow=true` to any query to subscribe to realtime updates as new
+data is inserted into the database.
+
+```
+$ curl -sNg 'http://localhost:4000/?filter=["location","city",/land$/]&map=name&follow=true'
+[["dominictarr"],
+["substack"]
+```
+
+The http connection stays alive and no terminating `']'` is ever sent.
+
+Now if we insert another record for somebody from a city that ends in `"land"`:
+
+```
+$ echo '{"name":"chrisdickinson","location":{"city":"Portland"}}' | curl -X POST -d@- 'http://localhost:4000/chrisdickinson'
+ok
+```
+
+we see a new record in the output stream from before:
+
+```
+$ curl -sNg 'http://localhost:4000/?filter=["location","city",/land$/]&map=name&follow=true'
+[["dominictarr"],
+["substack"],
+["chrisdickinson"]
+```
+
+Make sure to use `-N` with curl in follow mode because curl uses line-buffering
+by default.
+
 ## server code
 
 Here's the example server we've been using to respond to requests on the query string:
@@ -168,6 +200,7 @@ var query = require('../')(db);
 var server = http.createServer(function (req, res) {
     if (req.method === 'GET') {
         res.setHeader('content-type', 'application/json');
+        res.setTimeout(0);
         
         var q = query(req.url);
         q.on('error', function (err) { res.end(err + '\n') });
