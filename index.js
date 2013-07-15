@@ -1,9 +1,14 @@
 var qs = require('querystring');
 var url = require('url');
+
 var search = require('level-search');
+var pull = require('pull-level')
+var toStream = require('pull-stream-to-stream')
+
 var Transform = require('readable-stream/transform');
 var PassThrough = require('readable-stream/passthrough');
 var through = require('through');
+
 var literalParse = require('json-literal-parse');
 var pathway = require('pathway');
 
@@ -65,6 +70,7 @@ module.exports = function (db) {
             keys: parseBoolean(params.keys),
             values: parseBoolean(params.values),
             limit: params.limit && parseInt(params.limit, 10),
+            tail: parseBoolean(params.follow),
             keyEncoding: params.keyEncoding,
             valueEncoding: params.valueEncoding,
             encoding: params.encoding
@@ -83,6 +89,9 @@ module.exports = function (db) {
             }
             if (!Array.isArray(query)) query = [ query ];
             stream = index.createSearchStream(query, dbOpts);
+        }
+        else if (dbOpts.tail) {
+            stream = toStream(null, pull.read(db, dbOpts));
         }
         else {
             stream = db.createReadStream(dbOpts);

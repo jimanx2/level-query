@@ -10,6 +10,7 @@ var query = require('../')(db);
 var server = http.createServer(function (req, res) {
     if (req.method === 'GET') {
         res.setHeader('content-type', 'application/json');
+        res.setTimeout(0);
         
         var q = query(req.url);
         q.on('error', function (err) { res.end(err + '\n') });

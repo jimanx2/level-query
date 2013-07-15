@@ -6,6 +6,8 @@
   "dependencies": {
     "json-literal-parse": "~0.0.0",
     "level-search": "~1.5.0",
+    "pull-level": "~1.1.8",
+    "pull-stream-to-stream": "~1.2.6",
     "pathway": "~0.1.2",
     "readable-stream": "~1.0.2",
     "through": "~2.3.4"
