@@ -7,6 +7,10 @@ var sublevel = require('level-sublevel');
 var db = sublevel(levelup(__dirname + '/db', { encoding: 'json' }));
 var query = require('../')(db);
 
+db.batch(require('../test/nested.json').map(function (row) {
+    return { type: 'put', key: row.name, value: row };
+}));
+
 var server = http.createServer(function (req, res) {
     if (req.method === 'GET') {
         res.setHeader('content-type', 'application/json');
