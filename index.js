@@ -91,7 +91,17 @@ module.exports = function (db) {
             stream = index.createSearchStream(query, dbOpts);
         }
         else if (dbOpts.tail) {
-            stream = toStream(null, pull.read(db, dbOpts));
+            stream = toStream(null, pull.read(db, dbOpts))
+                .pipe(through(function (row) {
+                    if (row && typeof row === 'object'
+                    && typeof row.value === 'string') {
+                        try { var value = JSON.parse(row.value) }
+                        catch (err) { return this.queue(row) }
+                        this.queue({ key: row.key, value: value });
+                    }
+                    else this.queue(row);
+                }))
+            ;
         }
         else {
             stream = db.createReadStream(dbOpts);
